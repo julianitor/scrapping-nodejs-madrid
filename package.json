@@ -1,0 +1,19 @@
+{
+  "name": "scraping-nodejs-madrid",
+  "version": "1.0.0",
+  "description": "",
+  "main": "scraper.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seetransparent/scraping-nodejs-madrid.git"
+  },
+  "author": "Julian Toledo & Nil Sanz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seetransparent/scraping-nodejs-madrid/issues"
+  },
+  "homepage": "https://github.com/seetransparent/scraping-nodejs-madrid#readme"
+}
