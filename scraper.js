@@ -1,3 +1,5 @@
+/* eslint-disable func-names */
+
 const Bluebird = require('bluebird');
 const _ = require('lodash');
 const request = Bluebird.promisify(require('request'));
@@ -45,7 +47,23 @@ function parseBody(body) {
   return parsedData;
 }
 
-getBody(getUrlFromPathname(BASE_PATHNAME))
-  .then(body => parseBody(body))
-  .then(console.dir)
+const mine = Bluebird.coroutine(function* (bodyData) {
+  let url;
+  if (_.isEmpty(bodyData)) {
+    url = BASE_PATHNAME;
+  } else {
+    url = _.get(bodyData, 'pagination.nextPageHref');
+  }
+
+  const body = yield getBody(getUrlFromPathname(url));
+  const pageData = parseBody(body);
+  if (_.get(pageData, 'listings.length')) {
+    console.log(pageData.listings);
+  }
+  if (_.get(pageData, 'pagination.nextPageHref')) {
+    yield mine(pageData);
+  }
+});
+
+mine()
   .catch(err => console.error(err));
