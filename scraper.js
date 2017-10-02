@@ -6,8 +6,8 @@ const request = Bluebird.promisify(require('request'));
 const cheerio = require('cheerio');
 const queue = require('async/queue');
 
-const WEBSITE = 'https://www.idealista.com';
-const BASE_PATHNAME = '/alquiler-viviendas/madrid/centro/malasana-universidad/';
+const WEBSITE = 'https://www.idealista.it';
+const BASE_PATHNAME = '/es/affitto-case/bologna/navile-bolognina/';
 
 function getUrlFromPathname(pathname) {
   return `${WEBSITE}${pathname}`;
@@ -21,7 +21,7 @@ function getBody(url) {
 
 /**
  * @param {string} body
- * @return {Bluebird<object>} Data parsed from the html page
+ * @return {object} Data parsed from the html page
  *
  * The javascript has been disabled in the browser so that it disables
  * possible ajax requests that might populate the DOM (check photos).
@@ -34,10 +34,9 @@ function parsePageBody(body) {
   const $ = cheerio.load(body);
   const parsedData = {};
   parsedData.pagination = {
-    currentPageNumber: $('li.selected span').text(), // https://i.imgur.com/PFUx1NQ.png
-    nextPageHref: $('.next a').attr('href'), // https://i.imgur.com/mBpVTwN.png
+    currentPageNumber: $('li.selected span').text(),
+    nextPageHref: $('.next a').attr('href'),
   };
-  // https://i.imgur.com/wAVyYuc.png
   parsedData.listings = [];
   $('.item').each((i, elementContainer) => {
     parsedData.listings.push({
@@ -49,6 +48,10 @@ function parsePageBody(body) {
   return parsedData;
 }
 
+/**
+ * @param {string} body
+ * @return {object} Data parsed from the html page
+ */
 function parseListingBody(body) {
   if (_.isEmpty(body)) {
     return null;
@@ -73,6 +76,13 @@ function parseListingBody(body) {
   return parsedData;
 }
 
+/**
+ * Queue worker for detailing
+ *
+ * @param {object} listing
+ * @param {function} callback
+ * @return {Promise} Callback call
+ */
 const detailer = queue((listing, callback) => {
   const listingUrl = getUrlFromPathname(_.get(listing, 'listingHref'));
   return getBody(listingUrl)
@@ -84,7 +94,13 @@ const detailer = queue((listing, callback) => {
     .finally(() => callback());
 });
 
-const mine = async function (bodyData) {
+/**
+ * Crawler recursive async function
+ *
+ * @param {object} bodyData
+ * @return {undefined}
+ */
+const crawl = async function (bodyData) {
   let url;
   if (_.isEmpty(bodyData)) {
     url = BASE_PATHNAME;
@@ -98,9 +114,9 @@ const mine = async function (bodyData) {
     detailer.push(pageData.listings);
   }
   if (_.get(pageData, 'pagination.nextPageHref')) {
-    await mine(pageData);
+    await crawl(pageData);
   }
 };
 
-mine()
+crawl()
   .catch(err => console.error(err));
