@@ -6,8 +6,8 @@ const request = Bluebird.promisify(require('request'));
 const cheerio = require('cheerio');
 const queue = require('async/queue');
 
-const WEBSITE = 'https://www.idealista.it';
-const BASE_PATHNAME = '/es/affitto-case/bologna/navile-bolognina/';
+const WEBSITE = 'https://www.idealista.com';
+const BASE_PATHNAME = '/alquiler-viviendas/madrid-madrid/';
 
 function getUrlFromPathname(pathname) {
   return `${WEBSITE}${pathname}`;
@@ -15,7 +15,16 @@ function getUrlFromPathname(pathname) {
 
 function getBody(url) {
   // https://i.imgur.com/ugrzqvl.png (no headers needed)
-  return request(url)
+  return request({
+    headers: {
+      'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'accept-encoding': 'deflate, sdch, br',
+      'accept-language': 'en-GB,en;q=0.8,en-US;q=0.6,es;q=0.4,ca;q=0.2',
+      'upgrade-insecure-requests': '1',
+    },
+    uri: url,
+  })
     .then(response => _.get(response, 'body', null));
 }
 
@@ -89,7 +98,8 @@ const detailer = queue((listing, callback) => {
     .then(parseListingBody)
     .then((parsedData) => {
       const data = _.assign({}, listing, parsedData, { url: listingUrl });
-      console.dir(data);
+      // console.dir(data);
+      console.log(JSON.stringify(data));
     })
     .finally(() => callback());
 });
